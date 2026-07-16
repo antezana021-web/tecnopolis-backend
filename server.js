@@ -20,8 +20,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/order", orderRoutes);
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
-});
+    console.log(`Servidor ejecutándose en el puerto ${PORT}`);
+    });
