@@ -1,28 +1,48 @@
 const { v4: uuidv4 } = require("uuid");
 
-// Aquí guardaremos temporalmente las órdenes.
-// Más adelante esto será Supabase.
-const orders = {};
-
-/**
- * Crear una nueva orden
- */
-function createOrder(orderData) {
+async function createOrder(orderData) {
 
     const orderId = uuidv4();
 
-    orders[orderId] = orderData;
+    // Productos del carrito de Shopify
+    const line_items = orderData.items.map(item => ({
+        variant_id: item.variant_id,
+        quantity: item.quantity
+    }));
 
-    return orderId;
+    // Crear Draft Order en Shopify
+    const response = await fetch(
+        `https://${process.env.SHOPIFY_STORE}/admin/api/${process.env.SHOPIFY_API_VERSION}/draft_orders.json`,
+        {
+            method: "POST",
+            headers: {
+                "X-Shopify-Access-Token": process.env.SHOPIFY_ADMIN_ACCESS_TOKEN,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                draft_order: {
+                    line_items
+                }
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error(data);
+        throw new Error("No se pudo crear el Draft Order");
+    }
+
+    return {
+        orderId,
+        draftOrderId: data.draft_order.id,
+        invoiceUrl: data.draft_order.invoice_url
+    };
 }
 
-/**
- * Buscar una orden por ID
- */
-function getOrder(orderId) {
-
-    return orders[orderId];
-
+async function getOrder(orderId) {
+    return { orderId };
 }
 
 module.exports = {

@@ -1,38 +1,34 @@
 const orderService = require("../services/orderService");
 
-/**
- * Crear pedido
- */
-const createOrder = (req, res) => {
+const createOrder = async (req, res) => {
 
-    const orderId = orderService.createOrder(req.body);
+    try {
 
-    res.status(201).json({
-        success: true,
-        orderId
-    });
+        const result = await orderService.createOrder(req.body);
 
-};
+        res.status(201).json({
+            success: true,
+            ...result
+        });
 
-/**
- * Obtener pedido
- */
-const getOrder = (req, res) => {
+    } catch (error) {
 
-    const { orderId } = req.params;
+        console.error(error);
 
-    const order = orderService.getOrder(orderId);
-
-    if (!order) {
-
-        return res.status(404).json({
+        res.status(500).json({
             success: false,
-            message: "Pedido no encontrado"
+            message: error.message
         });
 
     }
 
-    res.json(order);
+};
+
+const getOrder = (req, res) => {
+
+    res.json({
+        success: true
+    });
 
 };
 
