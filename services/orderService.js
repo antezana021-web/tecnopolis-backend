@@ -1,27 +1,38 @@
 const { v4: uuidv4 } = require("uuid");
 
+const SHOP = process.env.SHOPIFY_STORE;
+const TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+const VERSION = process.env.SHOPIFY_API_VERSION;
+
 async function createOrder(orderData) {
 
-    const orderId = uuidv4();
+    const line_items = [];
 
-    // Productos del carrito de Shopify
-    const line_items = orderData.items.map(item => ({
-        variant_id: item.variant_id,
-        quantity: item.quantity
-    }));
+    if (orderData.items) {
 
-    // Crear Draft Order en Shopify
+        for (const item of orderData.items) {
+
+            line_items.push({
+                variant_id: item.variant_id,
+                quantity: item.quantity
+            });
+
+        }
+
+    }
+
     const response = await fetch(
-        `https://${process.env.SHOPIFY_STORE}/admin/api/${process.env.SHOPIFY_API_VERSION}/draft_orders.json`,
+        `https://${SHOP}/admin/api/${VERSION}/orders.json`,
         {
             method: "POST",
             headers: {
-                "X-Shopify-Access-Token": process.env.SHOPIFY_ADMIN_ACCESS_TOKEN,
+                "X-Shopify-Access-Token": TOKEN,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                draft_order: {
-                    line_items
+                order: {
+                    line_items,
+                    financial_status: "pending"
                 }
             })
         }
@@ -29,20 +40,27 @@ async function createOrder(orderData) {
 
     const data = await response.json();
 
-    if (!response.ok) {
-        console.error(data);
-        throw new Error("No se pudo crear el Draft Order");
-    }
+    console.log(data);
 
-    return {
-        orderId,
-        draftOrderId: data.draft_order.id,
-        invoiceUrl: data.draft_order.invoice_url
-    };
+    return data.order.id;
+
 }
 
 async function getOrder(orderId) {
-    return { orderId };
+
+    const response = await fetch(
+        `https://${SHOP}/admin/api/${VERSION}/orders/${orderId}.json`,
+        {
+            headers: {
+                "X-Shopify-Access-Token": TOKEN
+            }
+        }
+    );
+
+    const data = await response.json();
+
+    return data.order;
+
 }
 
 module.exports = {
