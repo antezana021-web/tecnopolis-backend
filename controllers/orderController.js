@@ -4,11 +4,11 @@ const createOrder = async (req, res) => {
 
     try {
 
-        const result = await orderService.createOrder(req.body);
+        const orderId = await orderService.createOrder(req.body);
 
         res.status(201).json({
             success: true,
-            ...result
+            orderId
         });
 
     } catch (error) {
@@ -26,8 +26,22 @@ const createOrder = async (req, res) => {
 
 const getOrder = (req, res) => {
 
+    const { orderId } = req.params;
+
+    const order = orderService.getOrder(orderId);
+
+    if (!order) {
+
+        return res.status(404).json({
+            success: false,
+            message: "Pedido no encontrado"
+        });
+
+    }
+
     res.json({
-        success: true
+        success: true,
+        order
     });
 
 };
