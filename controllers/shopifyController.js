@@ -1,3 +1,4 @@
+// C:\Users\PC MIGUEL\Desktop\tecnopolis\backend\controllers\shopifyController.js
 const {
     testShopifyConnection,
     getProducts,
@@ -77,10 +78,9 @@ async function createOrder(req, res) {
 }
 }
 
+
 async function exchangeRate(req, res) {
-
     try {
-
         const rate = await getExchangeRate();
 
         res.json({
@@ -89,18 +89,16 @@ async function exchangeRate(req, res) {
         });
 
     } catch (error) {
-
         console.error("Error al obtener la tasa:", error.message);
 
         res.status(500).json({
             ok: false,
             error: error.message
         });
-
     }
-
 }
-// Agrega esto en shopifyController.js
+
+
 async function getOrderDetails(req, res) {
     try {
         const { orderId } = req.params;
@@ -121,13 +119,13 @@ async function getOrderDetails(req, res) {
         const data = await response.json();
         
         // 2. Obtener la tasa de cambio actual directamente de la configuración del tema
-        const exchangeRate = await getExchangeRate();
+        const exchangeRateValue = await getExchangeRate();
 
         res.json({
             success: true,
             order: {
                 ...data.order,
-                tasaUsdt: parseFloat(exchangeRate) || 11.90 // <--- ¡Aquí va la tasa dinámica!
+                tasaUsdt: parseFloat(exchangeRateValue) || 11.90
             }
         });
 
