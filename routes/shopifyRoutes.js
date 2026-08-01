@@ -1,4 +1,3 @@
-// C:\Users\PC MIGUEL\Desktop\tecnopolis\backend\routes\shopifyRoutes.js
 const express = require("express");
 const router = express.Router();
 
@@ -7,13 +6,17 @@ const {
     listProducts,
     createOrder,
     exchangeRate,
-    getOrderDetails // <--- ¡Asegúrate de que esta línea esté aquí!
+    getOrderDetails
 } = require("../controllers/shopifyController");
 
 router.get("/test", testConnection);
 router.get("/products", listProducts);
 router.post("/create-order", createOrder);
-router.get("/exchange-rate", exchangeRate);
-router.get("/order/:orderId", getOrderDetails); // <--- Y esta ruta activa
+
+// Ruta limpia para la tasa de cambio
+router.get("/rate", exchangeRate);
+
+// Ruta para los detalles de la orden
+router.get("/order/:orderId", getOrderDetails);
 
 module.exports = router;
