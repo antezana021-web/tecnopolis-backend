@@ -177,6 +177,70 @@ if (!data || !data.order) {
 return data.order;
 }
 
+//__________________________________________________________
+//_________________________________________________________
+
+async function getExchangeRate() {
+
+    // Obtener el tema principal
+    const themeResponse = await fetch(`${API_URL}/themes.json`, {
+
+        method: "GET",
+
+        headers: {
+            "X-Shopify-Access-Token": TOKEN,
+            "Content-Type": "application/json"
+        }
+
+    });
+
+    if (!themeResponse.ok) {
+
+        throw new Error("No se pudieron obtener los temas");
+
+    }
+
+    const themes = await themeResponse.json();
+
+    const mainTheme = themes.themes.find(theme => theme.role === "main");
+
+    if (!mainTheme) {
+
+        throw new Error("No se encontró el tema principal");
+
+    }
+
+    // Leer settings_data.json
+    const assetResponse = await fetch(
+        `${API_URL}/themes/${mainTheme.id}/assets.json?asset[key]=config/settings_data.json`,
+        {
+
+            method: "GET",
+
+            headers: {
+                "X-Shopify-Access-Token": TOKEN,
+                "Content-Type": "application/json"
+            }
+
+        }
+    );
+
+    if (!assetResponse.ok) {
+
+        const error = await assetResponse.text();
+
+        throw new Error(error);
+
+    }
+
+    const asset = await assetResponse.json();
+
+    const settings = JSON.parse(asset.asset.value);
+
+    return settings.current.manual_exchange_rate_bob;
+
+}
+
 
 
 //__________________________________________
@@ -184,5 +248,6 @@ return data.order;
 module.exports = {
     testShopifyConnection,
     getProducts,
-    createShopifyOrder
+    createShopifyOrder,
+    getExchangeRate
 };

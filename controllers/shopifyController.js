@@ -1,7 +1,8 @@
 const {
     testShopifyConnection,
     getProducts,
-    createShopifyOrder
+    createShopifyOrder,
+    getExchangeRate
 } = require("../services/shopifyService");
 
 
@@ -76,9 +77,71 @@ async function createOrder(req, res) {
 }
 }
 
+async function exchangeRate(req, res) {
+
+    try {
+
+        const rate = await getExchangeRate();
+
+        res.json({
+            ok: true,
+            exchangeRate: rate
+        });
+
+    } catch (error) {
+
+        console.error("Error al obtener la tasa:", error.message);
+
+        res.status(500).json({
+            ok: false,
+            error: error.message
+        });
+
+    }
+
+}
+// Agrega esto en shopifyController.js
+async function getOrderDetails(req, res) {
+    try {
+        const { orderId } = req.params;
+        
+        // 1. Obtener la orden desde Shopify (usando la API Admin de Shopify)
+        const response = await fetch(`https://${process.env.SHOPIFY_STORE}/admin/api/2026-07/orders/${orderId}.json`, {
+            method: "GET",
+            headers: {
+                "X-Shopify-Access-Token": process.env.SHOPIFY_ADMIN_TOKEN,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            return res.status(404).json({ success: false, error: "Pedido no encontrado en Shopify" });
+        }
+
+        const data = await response.json();
+        
+        // 2. Obtener la tasa de cambio actual directamente de la configuración del tema
+        const exchangeRate = await getExchangeRate();
+
+        res.json({
+            success: true,
+            order: {
+                ...data.order,
+                tasaUsdt: parseFloat(exchangeRate) || 11.90 // <--- ¡Aquí va la tasa dinámica!
+            }
+        });
+
+    } catch (error) {
+        console.error("Error al obtener detalles del pedido:", error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+}
+
 
 module.exports = {
     testConnection,
     listProducts,
-    createOrder
+    createOrder,
+    exchangeRate,
+    getOrderDetails
 };
